@@ -1,0 +1,12 @@
+@import "tailwindcss"; /* Tailwind always comes first */
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+
+/* Global font */
+* {
+  font-family: "Outfit", sans-serif;
+}
+
+/* Custom theme variables */
+@theme {
+  --color-primary: #5044e5;
+}
