@@ -6,7 +6,7 @@
   font-family: "Outfit", sans-serif;
 }
 
-/* Custom theme variables */
+/* Custom theme variables for Tailwind v4 tokens */
 @theme {
   --color-primary: #5044e5;
 }
