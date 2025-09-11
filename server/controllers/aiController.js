@@ -25,6 +25,11 @@ export const generateArticle = async (req, res) => {
       const response = await AI.chat.completions.create({
         model: "gemini-2.0-flash",
         messages: [
+          {
+            role: "system",
+            content:
+              "Return the article in valid GitHub-flavored Markdown. Use a clear title, section headings (##), subheadings (###), bullet lists, and numbered lists where helpful. Bold key terms. Avoid front matter."
+          },
           { role: "user", content: prompt }
         ],
         temperature: 0.7,
