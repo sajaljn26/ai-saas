@@ -9,13 +9,9 @@ export const auth = async (req, res, next) => {
         const planFromPublic = user.publicMetadata?.plan;
         const isPremium = (planFromPrivate || planFromPublic) === 'premium';
 
-        console.log('Auth middleware:', { userId, planFromPrivate, planFromPublic, isPremium });
-
-        // Temporary: force premium for testing
-        req.plan = 'premium';
-
         const currentFreeUsage = Number(user.privateMetadata?.free_usage ?? 0);
         req.free_usage = currentFreeUsage;
+        req.plan = isPremium ? 'premium' : 'free';
 
         if (user.privateMetadata?.free_usage == null) {
             await clerkClient.users.updateUserMetadata(userId, {

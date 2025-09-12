@@ -71,13 +71,13 @@ export const getUserPlan = async (req, res) => {
     try {
         const { userId } = req.auth();
         const user = await clerkClient.users.getUser(userId);
-        
+
         const planFromPrivate = user.privateMetadata?.plan;
         const planFromPublic = user.publicMetadata?.plan;
         const currentPlan = planFromPrivate || planFromPublic || 'free';
-        
+
         const freeUsage = Number(user.privateMetadata?.free_usage ?? 0);
-        
+
         res.json({
             success: true,
             plan: currentPlan,
