@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useClerk, useUser } from '@clerk/clerk-react'
 import { NavLink } from 'react-router-dom'
 import { House, Hash, Image, Eraser, Scissors, FileText, Users, LogOut } from 'lucide-react'
+import axios from 'axios'
 
 const navItems = [
   { to: '/ai', label: 'Dashboard', Icon: House },
@@ -15,8 +16,28 @@ const navItems = [
 ]
 
 const Sidebar = ({ sidebar, setSidebar }) => {
-  const { user } = useUser()
+  const { user, getToken } = useUser()
   const { signOut, openUserProfile } = useClerk()
+  const [userPlan, setUserPlan] = useState('Free Plan')
+
+  useEffect(() => {
+    const fetchUserPlan = async () => {
+      try {
+        const { data } = await axios.get('/api/user/get-user-plan', {
+          headers: { Authorization: `Bearer ${await getToken()}` }
+        })
+        if (data.success) {
+          setUserPlan(data.plan === 'premium' ? 'Premium Plan' : 'Free Plan')
+        }
+      } catch (error) {
+        console.error('Error fetching user plan:', error)
+      }
+    }
+
+    if (user) {
+      fetchUserPlan()
+    }
+  }, [user, getToken])
 
   return (
     <div
@@ -55,7 +76,7 @@ const Sidebar = ({ sidebar, setSidebar }) => {
                 <img src={user?.imageUrl} alt="User avatar" className='w-8 h-8 rounded-full object-cover'/>
                 <div>
                     <h1 className='text-sm font-medium text-gray-800'>{user?.fullName || 'User'}</h1>
-                    <p className='text-xs text-gray-500'>Free Plan</p>
+                    <p className='text-xs text-gray-500'>{userPlan}</p>
                 </div>
             </div>
             <LogOut onClick={signOut} className='w-5 h-5 text-gray-500 hover:text-gray-800 cursor-pointer'/>

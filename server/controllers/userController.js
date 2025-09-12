@@ -1,4 +1,5 @@
 import sql from "../configs/db.js"
+import { clerkClient } from "@clerk/express";
 
 export const getUserCreations = async (req,res)=>{
     try {
@@ -51,7 +52,7 @@ export const toggleLikeCreation = async (req,res)=>{
             message = 'Creation Liked'
         }
 
-        const formattedArray = `{${updatedLikes.json(',')}}`
+        const formattedArray = `{${updatedLikes.join(',')}}`
 
         await sql`UPDATE creations SET likes = ${formattedArray}: text[] WHERE id =
         {id}`;
@@ -65,3 +66,25 @@ export const toggleLikeCreation = async (req,res)=>{
         res.json({success : false,message : error.message})
     }
 }
+
+export const getUserPlan = async (req, res) => {
+    try {
+        const { userId } = req.auth();
+        const user = await clerkClient.users.getUser(userId);
+        
+        const planFromPrivate = user.privateMetadata?.plan;
+        const planFromPublic = user.publicMetadata?.plan;
+        const currentPlan = planFromPrivate || planFromPublic || 'free';
+        
+        const freeUsage = Number(user.privateMetadata?.free_usage ?? 0);
+        
+        res.json({
+            success: true,
+            plan: currentPlan,
+            freeUsage: freeUsage,
+            isPremium: currentPlan === 'premium'
+        });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};

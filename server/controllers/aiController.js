@@ -25,11 +25,7 @@ export const generateArticle = async (req, res) => {
       const response = await AI.chat.completions.create({
         model: "gemini-2.0-flash",
         messages: [
-          {
-            role: "system",
-            content:
-              "Return the article in valid GitHub-flavored Markdown. Use a clear title, section headings (##), subheadings (###), bullet lists, and numbered lists where helpful. Bold key terms. Avoid front matter."
-          },
+          
           { role: "user", content: prompt }
         ],
         temperature: 0.7,
@@ -39,8 +35,8 @@ export const generateArticle = async (req, res) => {
       const content = response.choices[0].message.content;
   
       await sql`
-        INSERT INTO creations (user_id, prompt, content, type)
-        VALUES (${userId}, ${prompt}, ${content}, 'article')
+        INSERT INTO creations (user_id, prompt, content, type, publish)
+        VALUES (${userId}, ${prompt}, ${content}, 'article', true)
       `;
   
       if (plan !== "premium") {
@@ -137,8 +133,8 @@ export const generateArticle = async (req, res) => {
       
   
       await sql`
-        INSERT INTO creations (user_id, prompt, content, type)
-        VALUES (${userId}, ${prompt}, ${secure_url}, 'image')
+        INSERT INTO creations (user_id, prompt, content, type, publish)
+        VALUES (${userId}, ${prompt}, ${secure_url}, 'image', ${publish})
       `;
   
       
@@ -156,7 +152,7 @@ export const generateArticle = async (req, res) => {
   export const removeImageBackground = async (req, res) => {
     try {
       const { userId } = req.auth(); 
-      const {image} = req.file;
+      const image = req.file;
       const plan = req.plan;
       
   
@@ -170,8 +166,7 @@ export const generateArticle = async (req, res) => {
       const {secure_url} = await cloudinary.uploader.upload(image.path,{
         transformation : [
             {
-                effect : 'background_removal',
-                background_removal : "remove_the_background"
+                effect : 'background_removal'
             }
         ]
       })
@@ -198,7 +193,8 @@ export const generateArticle = async (req, res) => {
   export const removeImageObject = async (req, res) => {
     try {
       const { userId } = req.auth(); 
-      const {image} = req.file;
+      const image = req.file;
+      const { object } = req.body;
       const plan = req.plan;
       
   
@@ -206,9 +202,11 @@ export const generateArticle = async (req, res) => {
         return res.json({ success: false, message: "This feature is only available for premium subscriptions" });
       }
 
-     
+      if (!object) {
+        return res.json({ success: false, message: "Object name is required" });
+      }
 
-     
+      
       const {public_id} = await cloudinary.uploader.upload(image.path)
       
       const imageUrl = cloudinary.url(public_id,{

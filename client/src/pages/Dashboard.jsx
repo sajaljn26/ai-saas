@@ -2,18 +2,57 @@ import React, { useState, useEffect } from 'react'
 import { dummyPublishedCreationData } from '../assets/assets'
 import { Gem, Sparkles } from 'lucide-react'
 import CreationItem from '../components/CreationItem'
+import { useAuth, useUser } from '@clerk/clerk-react'
+import axios from 'axios'
+import toast from 'react-hot-toast'
+
+axios.defaults.baseURL = import.meta.env.VITE_BASE_URL
 
 const Dashboard = () => {
-
+  const { getToken } = useAuth()
   const [creations,setCreations] = useState([])
+  const [loading,setLoading] = useState(true)
+  const [userPlan, setUserPlan] = useState('Free')
+
+ 
 
   const getDashboardData = async()=>{
-    setCreations(dummyPublishedCreationData)
+   try {
+    const {data} = await axios.get('/api/user/get-user-creations',{
+      headers : {Authorization: `Bearer ${await getToken()}`}
+    })
+
+    if(data.success){
+      setCreations(data.creations)
+    }else{
+      toast.error(error.message)
+      
+    }
+
+
+   } catch (error) {
+    toast.error(error.message)
+   }
+   setLoading(false)
+  }
+
+  const fetchUserPlan = async () => {
+    try {
+      const { data } = await axios.get('/api/user/get-user-plan', {
+        headers: { Authorization: `Bearer ${await getToken()}` }
+      })
+      if (data.success) {
+        setUserPlan(data.plan === 'premium' ? 'Premium' : 'Free')
+      }
+    } catch (error) {
+      console.error('Error fetching user plan:', error)
+    }
   }
  
 
   useEffect(()=>{
     getDashboardData()
+    fetchUserPlan()
   },[])
 
   return (
@@ -38,7 +77,7 @@ const Dashboard = () => {
 
           <div className='text-slate-600'>
             <p className='text-sm'>Active Plan</p>
-            <h2 className='text-xl font-semibold'>Free</h2>
+            <h2 className='text-xl font-semibold'>{userPlan}</h2>
           </div>
             <div className='w-10 h-10 rounded-lg bg-gradient-to-br from-[#FF61C5] to-[#0BB0D7] text-white flex justify-center items-center'>
               
@@ -47,12 +86,23 @@ const Dashboard = () => {
         </div>
       </div>
 
-        <div className='space-y-3'>
+      {
+        loading ? (
+                <div className='flex justify-center items-center h-3/4'>
+                <div className='animate-spin rounded-full h-11 w-11 border-3
+                border-purple-500 border-t-transparent'></div>
+                </div>
+        ):(
+          <div className='space-y-3'>
           <p className='mt-6 mb-4'>Recent Creations</p>
           {
             creations.map((item)=> <CreationItem key={item.id} item={item}/>)
           }
         </div>
+         )
+      }
+
+        
 
     </div>
   )

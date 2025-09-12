@@ -5,6 +5,7 @@ import {clerkMiddleware, requireAuth} from '@clerk/express'
 import aiRouter from "./routes/aiRoutes.js";
 import connectCloudinary from "./configs/cloudinary.js";
 import userRouter from "./routes/userRoutes.js";
+import webhookRouter from "./routes/webhookRoutes.js";
 
 const app = express();
 
@@ -16,6 +17,9 @@ app.use(express.json())
 app.use(clerkMiddleware())
 
 app.get('/',(req,res)=>res.send('Server is live'));
+
+// Webhook routes (no auth required)
+app.use('/api/webhooks', webhookRouter);
 
 app.use(requireAuth());
 app.use('/api/ai',aiRouter)
